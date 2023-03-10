@@ -1,0 +1,10 @@
+{
+    "name": "wds-app",
+    "version": "0.0.1",
+    "main": "dist/wds-app.js",
+    "files": [
+        "dist"
+    ],
+    "dependencies": {},
+    "devDependencies": {}
+}

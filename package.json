@@ -1,0 +1,25 @@
+{
+    "name": "wds",
+    "version": "0.0.1",
+    "main": "dist/wds.js",
+    "scripts": {
+        "dev": "cls && tauri dev",
+        "build": "cls && tauri build"
+    },
+    "devDependencies": {
+        "@tauri-apps/api": "^1.2.0",
+        "@tauri-apps/cli": "^1.2.3",
+        "eslint": "^8.35.0",
+        "eslint-config-plus": "^1.0.6",
+        "eslint-plugin-html": "^7.1.0",
+        "eslint-plugin-vue": "^9.9.0",
+        "fps-detector": "^1.0.3",
+        "i18next": "^22.4.11",
+        "i18next-browser-languagedetector": "^7.0.1",
+        "i18next-vue": "^2.1.1",
+        "stylelint": "^15.2.0",
+        "stylelint-config-plus": "^1.0.2",
+        "vine-ui": "^3.1.1"
+    },
+    "private": true
+}
