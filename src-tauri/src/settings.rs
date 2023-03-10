@@ -149,6 +149,34 @@ pub fn save_profile(action: &str, data: ProfileItem) -> bool {
     }
 }
 
+pub fn get_profile_by_login(username: String, password: String) -> Option<ProfileItem> {
+    let settings = get_settings();
+    let res = settings.profile_list.iter().find(|item| {
+        if item.username == username {
+            if username.is_empty() {
+                return true;
+            }
+            if item.password == password {
+                return true;
+            }
+        }
+        false
+    });
+    match res {
+        Some(p) => Some(p.clone()),
+        None => None,
+    }
+}
+
+pub fn get_profile_by_id(id: String) -> Option<ProfileItem> {
+    let settings = get_settings();
+    let res = settings.profile_list.iter().find(|item| item.id == id);
+    match res {
+        Some(p) => Some(p.clone()),
+        None => None,
+    }
+}
+
 //======================================================================================
 
 pub fn get_settings() -> Settings {
