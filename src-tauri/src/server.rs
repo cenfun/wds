@@ -13,7 +13,7 @@ use hyper::server::conn::AddrStream;
 use hyper::{
     header::{HeaderValue, AUTHORIZATION, COOKIE, LOCATION, SET_COOKIE, WWW_AUTHENTICATE},
     service::{make_service_fn, service_fn},
-    Body as HBody, HeaderMap, Request, Response, Server, StatusCode, Uri,
+    Body as HBody, HeaderMap, Request, Response, Server, StatusCode,
 };
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
@@ -21,8 +21,8 @@ use tokio::sync::mpsc;
 use urlencoding::{decode as url_decode, encode as url_encode};
 
 use crate::settings::get_settings;
-use crate::utils::log_green;
 use crate::utils::{delay, log};
+use crate::utils::{log_green, log_red};
 
 use crate::cache::get_secret_key;
 use crate::cache::get_sender;
@@ -169,14 +169,30 @@ fn check_permission(
         // println!("list {:?} prefix {}", list, prefix);
 
         // check method
-        let method = req.method();
-        println!("method {:?} permission {:?}", method, dir.permission);
+        let method = req.method().to_string();
+        let permission = dir.permission.clone();
+        if let Some(res) = check_method_permission(&method, &permission) {
+            log_red(format!("[{}] no permission: {} {}", addr, method, prefix));
+            return Err(res);
+        }
 
         return Ok((base, prefix));
     }
 
-    log(format!("[{}] not found: {}", addr, path));
+    log_red(format!("[{}] not found: {}", addr, path));
     Err(res_not_found(path))
+}
+
+fn check_method_permission(method: &String, permission: &String) -> Option<Response<DBody>> {
+    if permission == "read" {
+        // println!("method {:?} permission {}", method, permission);
+        let readonly = ["get", "head", "options", "propfind"];
+        let m = method.to_lowercase();
+        if let None = readonly.into_iter().find(|it| it.to_string() == m) {
+            return Some(res_forbidden());
+        }
+    }
+    None
 }
 
 fn check_token(req: &Request<HBody>, addr: &SocketAddr) -> Result<ProfileItem, Response<DBody>> {
@@ -221,15 +237,15 @@ fn check_login(req: &Request<HBody>, addr: &SocketAddr) -> Response<DBody> {
                 let token = encode(&Header::default(), &my_claims, &key);
                 if let Ok(t) = token {
                     //println!("token {:?}", t);
-                    log(format!("[{}] login successful", addr));
+                    log_green(format!("[{}] login successful", addr));
                     let location = req.uri().path();
                     return res_token(t, location);
                 }
             }
         }
     }
-    log(format!("[{}] login failed", addr));
 
+    log_red(format!("[{}] login failed", addr));
     res_unauthorized()
 }
 
@@ -286,6 +302,14 @@ fn res_unauthorized() -> Response<DBody> {
         )
         .status(StatusCode::UNAUTHORIZED)
         .body(DBody::from("unauthorized"))
+        .unwrap()
+}
+
+fn res_forbidden() -> Response<DBody> {
+    // log("forbidden");
+    Response::builder()
+        .status(StatusCode::FORBIDDEN)
+        .body(DBody::from("forbidden"))
         .unwrap()
 }
 
