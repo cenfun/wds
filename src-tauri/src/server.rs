@@ -1,72 +1,62 @@
 use std::net::SocketAddr;
+use std::time::{SystemTime, UNIX_EPOCH};
 use std::{collections::HashMap, convert::Infallible};
 
 use cookie::Cookie;
-use dav_server::{fakels::FakeLs, localfs::LocalFs, DavHandler};
+use dav_server::fs::DavFileSystem;
+use dav_server::{
+    body::Body as DBody, davpath::DavPath, fakels::FakeLs, localfs::LocalFs, memfs::MemFs,
+    DavHandler,
+};
 use http_auth_basic::Credentials;
+use hyper::server::conn::AddrStream;
 use hyper::{
     header::{HeaderValue, AUTHORIZATION, COOKIE, LOCATION, SET_COOKIE, WWW_AUTHENTICATE},
     service::{make_service_fn, service_fn},
-    Body, HeaderMap, Request, Response, Server, StatusCode,
+    Body as HBody, HeaderMap, Request, Response, Server, StatusCode, Uri,
 };
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
-use time::{Duration, OffsetDateTime};
 use tokio::sync::mpsc;
+use urlencoding::{decode as url_decode, encode as url_encode};
 
 use crate::settings::get_settings;
 use crate::utils::log_green;
 use crate::utils::{delay, log};
 
+use crate::cache::get_secret_key;
 use crate::cache::get_sender;
+use crate::cache::remove_secret_key;
 use crate::cache::update_sender;
 
 use crate::settings::get_profile_by_id;
 use crate::settings::get_profile_by_login;
 
-static SECRET_KEY: &str = "cenfun-wds";
+use crate::settings::ProfileItem;
+
 static TOKEN_KEY: &str = "wds-token";
 #[derive(Debug, Serialize, Deserialize)]
 struct Claims {
     id: String,
-    #[serde(with = "jwt_numeric_date")]
-    exp: OffsetDateTime,
+    exp: u64,
 }
 
 impl Claims {
     pub fn new(id: String) -> Self {
-        let iat = OffsetDateTime::now_utc();
-        let exp = iat + Duration::days(1);
+        // exp Required (validate_exp defaults to true in validation). Expiration time (as UTC timestamp)
+        let now = SystemTime::now();
+        let start = now
+            .duration_since(UNIX_EPOCH)
+            .expect("Time went backwards")
+            .as_secs();
 
-        Self {
-            id,
-            // Required (validate_exp defaults to true in validation). Expiration time (as UTC timestamp)
-            exp,
-        }
-    }
-}
+        // 12 hours
+        let dur = 12 * 60 * 60;
+        let exp = start + dur;
 
-mod jwt_numeric_date {
-    //! Custom serialization of OffsetDateTime to conform with the JWT spec (RFC 7519 section 2, "Numeric Date")
-    use serde::{self, Deserialize, Deserializer, Serializer};
-    use time::OffsetDateTime;
+        //println!("exp {}", exp);
 
-    /// Serializes an OffsetDateTime to a Unix timestamp (milliseconds since 1970/1/1T00:00:00T)
-    pub fn serialize<S>(date: &OffsetDateTime, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let timestamp = date.unix_timestamp();
-        serializer.serialize_i64(timestamp)
-    }
-
-    /// Attempts to deserialize an i64 and use as a Unix timestamp
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<OffsetDateTime, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        OffsetDateTime::from_unix_timestamp(i64::deserialize(deserializer)?)
-            .map_err(|_| serde::de::Error::custom("invalid Unix timestamp value"))
+        Self { id, exp }
     }
 }
 
@@ -84,16 +74,17 @@ pub async fn restart() -> bool {
 }
 
 pub fn start_server() {
+    remove_secret_key();
     tokio::spawn(async {
         let settings = get_settings();
         //println!("{:?}", settings);
 
         let addr: SocketAddr = ([0, 0, 0, 0], settings.port).into();
 
-        let make_service =
-            make_service_fn(
-                move |_conn| async move { Ok::<_, Infallible>(service_fn(request_handle)) },
-            );
+        let make_service = make_service_fn(move |conn: &AddrStream| {
+            let remote_addr = conn.remote_addr();
+            async move { Ok::<_, Infallible>(service_fn(move |req| request_handle(req, remote_addr))) }
+        });
 
         log_green(format!("start server listening on {:?}", addr));
 
@@ -114,64 +105,198 @@ pub fn start_server() {
     });
 }
 
-async fn request_handle(req: Request<Body>) -> Result<Response<Body>, Infallible> {
+//===============================================================================
+
+async fn request_handle(
+    req: Request<HBody>,
+    addr: SocketAddr,
+) -> Result<Response<DBody>, Infallible> {
+    let profile = match check_token(&req, &addr) {
+        Ok(p) => p,
+        Err(res) => return Ok(res),
+    };
+
+    let user = get_current_user(&profile);
+    let method = req.method();
+    let path = req.uri().path();
+    log(format!("[{}] {} {} {}", addr, user, method, path));
+
+    let builder = DavHandler::builder();
+    let dav_config = match path {
+        "/" => builder.filesystem(create_root_fs(&profile).await),
+        _ => match check_permission(&req, &addr, &profile) {
+            Ok((base, prefix)) => {
+                //println!("base: {} prefix: {}", base, prefix);
+                builder
+                    .filesystem(LocalFs::new(base, false, false, false))
+                    .strip_prefix(prefix)
+            }
+            Err(res) => return Ok(res),
+        },
+    };
+
+    let dav_server = dav_config.locksystem(FakeLs::new()).build_handler();
+
+    let res = dav_server.handle(req).await;
+    Ok(res)
+}
+
+//===============================================================================
+
+fn check_permission(
+    req: &Request<HBody>,
+    addr: &SocketAddr,
+    profile: &ProfileItem,
+) -> Result<(String, String), Response<DBody>> {
+    let path = req.uri().path();
+    let list: Vec<&str> = path.split("/").collect();
+
+    // println!("path {:?} list {:?}", path, list);
+
+    //always starts with /
+    let first_name = list[1];
+
+    //Virtual root name
+    let root_name = match url_decode(first_name) {
+        Ok(p) => p.to_string(),
+        Err(e) => return Err(res_bad_request(e.to_string())),
+    };
+
+    let dir = profile.dir_list.iter().find(|item| item.name == root_name);
+    if let Some(dir) = dir {
+        let base = dir.path.clone();
+        let prefix = format!("/{}", &root_name);
+        // println!("list {:?} prefix {}", list, prefix);
+
+        // check method
+        let method = req.method();
+        println!("method {:?} permission {:?}", method, dir.permission);
+
+        return Ok((base, prefix));
+    }
+
+    log(format!("[{}] not found: {}", addr, path));
+    Err(res_not_found(path))
+}
+
+fn check_token(req: &Request<HBody>, addr: &SocketAddr) -> Result<ProfileItem, Response<DBody>> {
     let headers = req.headers();
     // println!("headers: {:?}", headers);
     let cookies = get_cookies(headers);
-
-    let builder = Response::builder();
-    // check token
     if let Some(token) = cookies.get(TOKEN_KEY) {
         //decode token
-        let key = DecodingKey::from_secret(SECRET_KEY.as_ref());
+        let key = DecodingKey::from_secret(get_secret_key().as_ref());
         let td = decode::<Claims>(token, &key, &Validation::default());
-
         //println!("token {} {:?}", token, td);
 
-        if let Ok(d) = td {
-            let id = d.claims.id;
-            println!("token id {:?}", id);
-
-            let profile = get_profile_by_id(id);
-            println!("profile {:?}", profile);
-
-            let res = builder
-                .status(StatusCode::OK)
-                .body(Body::from("check token success"))
-                .unwrap();
-            return Ok(res);
+        match td {
+            Ok(d) => {
+                if let Some(profile) = get_profile_by_id(d.claims.id) {
+                    return Ok(profile);
+                }
+            }
+            Err(e) => {
+                // when token failed, continue check authorization, do not return
+                log(format!("[{}] {}", addr, e.to_string()));
+            }
         }
-
-        // when token failed, continue check authorization, do not return
     }
+    return Err(check_login(req, addr));
+}
 
+fn check_login(req: &Request<HBody>, addr: &SocketAddr) -> Response<DBody> {
+    let headers = req.headers();
     if let Some(authorization) = headers.get(AUTHORIZATION) {
         let auth_header_value = String::from(authorization.to_str().unwrap());
-        return match Credentials::from_header(auth_header_value) {
-            Ok(credentials) => {
-                // check user pass
-                let username = credentials.user_id;
-                let password = credentials.password;
-                //log(format!("got credentials {}/{}", username, password));
+        if let Ok(credentials) = Credentials::from_header(auth_header_value) {
+            // check user pass
+            let username = credentials.user_id;
+            let password = credentials.password;
+            // log(format!("got credentials {}/{}", username, password));
 
-                if let Some(profile) = get_profile_by_login(username, password) {
-                    // println!("profile {:?}", profile);
-                    let my_claims = Claims::new(profile.id);
-                    let key = EncodingKey::from_secret(SECRET_KEY.as_ref());
-                    let token = encode(&Header::default(), &my_claims, &key);
-                    if let Ok(t) = token {
-                        //println!("token {:?}", t);
-                        return Ok(res_token(t, req));
-                    }
+            if let Some(profile) = get_profile_by_login(username, password) {
+                // println!("profile {:?}", profile);
+                let my_claims = Claims::new(profile.id);
+                let key = EncodingKey::from_secret(get_secret_key().as_ref());
+                let token = encode(&Header::default(), &my_claims, &key);
+                if let Ok(t) = token {
+                    //println!("token {:?}", t);
+                    log(format!("[{}] login successful", addr));
+                    let location = req.uri().path();
+                    return res_token(t, location);
                 }
-
-                Ok(res_unauthorized())
             }
-            Err(e) => Ok(res_bad_request(e.to_string())),
-        };
+        }
     }
+    log(format!("[{}] login failed", addr));
 
-    Ok(res_unauthorized())
+    res_unauthorized()
+}
+
+//===============================================================================
+
+async fn create_root_fs(profile: &ProfileItem) -> Box<MemFs> {
+    let fs = MemFs::new();
+    for item in profile.dir_list.iter() {
+        let src = format!("/{}", url_encode(&item.name));
+        // println!("src {:?}", src);
+        match DavPath::new(&src) {
+            Ok(dp) => {
+                let _ = fs.create_dir(&dp).await;
+            }
+            Err(e) => println!("{}", e),
+        }
+    }
+    fs
+}
+
+//===============================================================================
+
+fn res_token(token: String, location: &str) -> Response<DBody> {
+    // log("moved permanently");
+    let cookie = format!("{}={}; HttpOnly", TOKEN_KEY, token);
+    Response::builder()
+        .header(LOCATION, HeaderValue::from_str(location).unwrap())
+        .header(SET_COOKIE, HeaderValue::from_str(&cookie).unwrap())
+        .status(StatusCode::MOVED_PERMANENTLY)
+        .body(DBody::empty())
+        .unwrap()
+}
+
+fn res_not_found(str: impl Into<String>) -> Response<DBody> {
+    Response::builder()
+        .status(StatusCode::NOT_FOUND)
+        .body(DBody::from(str.into()))
+        .unwrap()
+}
+
+fn res_bad_request(str: impl Into<String>) -> Response<DBody> {
+    Response::builder()
+        .status(StatusCode::BAD_REQUEST)
+        .body(DBody::from(str.into()))
+        .unwrap()
+}
+
+fn res_unauthorized() -> Response<DBody> {
+    // log("unauthorized");
+    Response::builder()
+        .header(
+            WWW_AUTHENTICATE,
+            HeaderValue::from_static("Basic realm=wds"),
+        )
+        .status(StatusCode::UNAUTHORIZED)
+        .body(DBody::from("unauthorized"))
+        .unwrap()
+}
+
+//===============================================================================
+
+fn get_current_user(profile: &ProfileItem) -> String {
+    let username = profile.username.clone();
+    if username.is_empty() {
+        return "anonymous".into();
+    }
+    username
 }
 
 fn get_cookies(headers: &HeaderMap) -> HashMap<String, String> {
@@ -186,53 +311,3 @@ fn get_cookies(headers: &HeaderMap) -> HashMap<String, String> {
     }
     cookies
 }
-
-fn res_token(token: String, req: Request<Body>) -> Response<Body> {
-    log("moved permanently");
-
-    let uri = req.uri().to_string();
-    let cookie = format!("{}={}; HttpOnly", TOKEN_KEY, token);
-
-    Response::builder()
-        .header(LOCATION, HeaderValue::from_str(&uri).unwrap())
-        .header(SET_COOKIE, HeaderValue::from_str(&cookie).unwrap())
-        .status(StatusCode::MOVED_PERMANENTLY)
-        .body(Body::empty())
-        .unwrap()
-}
-
-fn res_bad_request(str: impl Into<String>) -> Response<Body> {
-    log("bad request");
-    Response::builder()
-        .status(StatusCode::BAD_REQUEST)
-        .body(Body::from(str.into()))
-        .unwrap()
-}
-
-fn res_unauthorized() -> Response<Body> {
-    log("unauthorized");
-    Response::builder()
-        .header(
-            WWW_AUTHENTICATE,
-            HeaderValue::from_static("Basic realm=wds"),
-        )
-        .status(StatusCode::UNAUTHORIZED)
-        .body(Body::from("unauthorized"))
-        .unwrap()
-}
-
-// async fn response_handle(req: Request<Body>) -> Response<()> {
-//     match (req.method(), req.uri().path()) {
-//         // (&Method::GET, "/") | (&Method::GET, "/index.html") => Ok(Response::new(full(INDEX))),
-//         // (&Method::GET, "/test.html") => client_request_response().await,
-//         // (&Method::POST, "/json_api") => api_post_response(req).await,
-//         // (&Method::GET, "/json_api") => api_get_response().await,
-//         _ => {
-//             // Return 404 not found response.
-//             Ok(Response::builder()
-//                 .status(StatusCode::NOT_FOUND)
-//                 .body(())
-//                 .unwrap())
-//         }
-//     }
-// }

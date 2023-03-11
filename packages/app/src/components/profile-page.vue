@@ -82,7 +82,7 @@
                   <div class="vui-flex-auto" />
                   <IconLabel
                     icon="edit"
-                    :tooltip="t('edit')"
+                    :tooltip="t('edit_profile')"
                     @click="onEditProfileClick(item)"
                   />
 
@@ -124,7 +124,7 @@
                   <div class="vui-flex-auto" />
                   <IconLabel
                     icon="edit"
-                    :tooltip="t('edit')"
+                    :tooltip="t('edit_dir')"
                     @click="onEditDirClick(item,dir)"
                   />
 

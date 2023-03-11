@@ -11,6 +11,7 @@ pub static CACHE: Lazy<Mutex<Cache>> = Lazy::new(|| Mutex::new(Cache::default())
 pub struct Cache {
     pub settings: Option<Settings>,
     pub sender: Option<Sender<i32>>,
+    pub secret_key: Option<String>,
 }
 
 impl Default for Cache {
@@ -18,9 +19,12 @@ impl Default for Cache {
         Self {
             settings: None,
             sender: None,
+            secret_key: None,
         }
     }
 }
+
+//==============================================================
 
 pub fn remove_settings_cache() {
     let mut cache = CACHE.lock().unwrap();
@@ -40,6 +44,8 @@ pub fn update_settings_cache(settings: Settings) {
     cache.settings = Some(settings);
 }
 
+//==============================================================
+
 pub fn update_sender(sender: Sender<i32>) {
     let mut cache = CACHE.lock().unwrap();
     cache.sender = Some(sender);
@@ -51,4 +57,25 @@ pub fn get_sender() -> Option<Sender<i32>> {
         return Some(sender.clone());
     }
     None
+}
+
+//==============================================================
+
+pub fn remove_secret_key() {
+    let mut cache = CACHE.lock().unwrap();
+    cache.secret_key = None;
+}
+
+pub fn get_secret_key() -> String {
+    let mut cache = CACHE.lock().unwrap();
+    if let Some(secret_key) = &cache.secret_key {
+        return secret_key.clone();
+    }
+
+    let secret_key = format!("wds-{}", rand::random::<u64>().to_string());
+    cache.secret_key = Some(secret_key.clone());
+
+    // println!("new secret key: {}", secret_key);
+
+    secret_key
 }
