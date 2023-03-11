@@ -117,7 +117,7 @@ async fn request_handle(
     };
 
     let user = get_current_user(&profile);
-    let method = req.method();
+    let method = req.method().to_string();
     let path = req.uri().path();
     log(format!("[{}] {} {} {}", addr, user, method, path));
 
@@ -179,12 +179,16 @@ fn check_permission(
         return Ok((base, prefix));
     }
 
+    // if from root then no permission
     log_red(format!("[{}] not found: {}", addr, path));
     Err(res_not_found(path))
 }
 
-fn check_method_permission(method: &String, permission: &String) -> Option<Response<DBody>> {
-    if permission == "read" {
+fn check_method_permission(
+    method: &String,
+    permission: impl Into<String>,
+) -> Option<Response<DBody>> {
+    if permission.into() == "read" {
         // println!("method {:?} permission {}", method, permission);
         let readonly = ["get", "head", "options", "propfind"];
         let m = method.to_lowercase();
