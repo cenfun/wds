@@ -2,7 +2,7 @@
   <div class="wds-page wds-page-profile vui-flex-column">
     <div class="wds-page-header">
       <VuiFlex
-        gap="10px"
+        gap="20px"
         padding="5px 5px 5px 0"
       >
         <IconLabel
@@ -12,6 +12,15 @@
           :button="false"
         />
 
+        <div
+          class="wds-port"
+          :tooltip="t('edit_port')"
+          @click="onEditPortClick"
+        >
+          {{ t('port') }}:
+          <span>{{ state.port }}</span>
+        </div>
+
         <IconLabel
           icon="reload"
           :label="t('restart')"
@@ -20,12 +29,6 @@
 
         <div class="vui-flex-empty" />
 
-        <VuiInput
-          v-model="state.port"
-          type="number"
-        >
-          {{ t('port') }}
-        </VuiInput>
 
         <IconLabel
           icon="plus"
@@ -175,6 +178,10 @@
         v-if="editor.type==='profile'"
         @updated="onUpdated"
       />
+      <EditPort
+        v-if="editor.type==='port'"
+        @updated="onUpdated"
+      />
       <EditDir
         v-if="editor.type==='dir'"
         @updated="onUpdated"
@@ -199,7 +206,9 @@ import { save_profile, save_dir } from '../utils/api-private.js';
 import IconLabel from './icon-label.vue';
 
 import EditProfile from './edit-profile.vue';
+import EditPort from './edit-port.vue';
 import EditDir from './edit-dir.vue';
+
 
 import { useTranslation } from 'i18next-vue';
 const { t } = useTranslation();
@@ -209,8 +218,7 @@ const emit = defineEmits(['updated', 'restart']);
 const {
     VuiButton,
     VuiFlex,
-    VuiModal,
-    VuiInput
+    VuiModal
 } = components;
 
 
@@ -299,6 +307,17 @@ const onDeleteProfileClick = (item) => {
     };
 };
 
+// =====================================================================================
+
+const onEditPortClick = () => {
+    editor.type = 'port';
+    editor.data = {
+        port: toRaw(state.port)
+    };
+    editor.title = t('edit_port');
+    editor.visible = true;
+};
+
 const onRestartClick = () => {
     emit('restart');
 };
@@ -320,6 +339,14 @@ const onUpdated = () => {
     }
 }
 
+.wds-port {
+    cursor: pointer;
+
+    &:hover {
+        color: #3a9bfc;
+    }
+}
+
 .wds-username {
     padding: 0 3px;
     font-family: "Courier New", Courier, monospace;
@@ -337,8 +364,9 @@ const onUpdated = () => {
 
 .wds-dir-permission {
     padding: 3px 5px;
+    font-size: 12px;
     border-radius: 5px;
-    background-color: #eee;
+    background-color: #ddd;
 }
 
 .wds-dir-name {

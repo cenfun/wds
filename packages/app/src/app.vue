@@ -45,7 +45,7 @@
 </template>
 <script setup>
 import {
-    onMounted, reactive, provide, watch
+    onMounted, reactive, provide
 } from 'vue';
 
 import { components, generateTooltips } from 'vine-ui';
@@ -54,9 +54,7 @@ import { listen } from '@tauri-apps/api/event';
 
 import { log } from './utils/helper.js';
 
-import {
-    get_settings, save_port, restart
-} from './utils/api-private.js';
+import { get_settings, restart } from './utils/api-private.js';
 
 import ProfilePage from './components/profile-page.vue';
 
@@ -66,7 +64,6 @@ import SettingsPage from './components/settings-page.vue';
 import DialogConfirm from './components/dialog-confirm.vue';
 
 import { useTranslation } from 'i18next-vue';
-import { toNum } from './utils/util';
 
 const { t, i18next } = useTranslation();
 
@@ -152,18 +149,6 @@ const onUpdated = async () => {
 const onRestart = async () => {
     await restart();
 };
-
-watch(() => state.port, async (v, p) => {
-    if (!p) {
-        return;
-    }
-    const nv = toNum(v);
-    const np = toNum(p);
-    if (nv !== np) {
-        await save_port(nv);
-        await restart();
-    }
-});
 
 // =====================================================================================
 
