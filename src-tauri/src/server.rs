@@ -119,7 +119,13 @@ async fn request_handle(
     let user = get_current_user(&profile);
     let method = req.method().to_string();
     let path = req.uri().path();
-    log(format!("[{}] {} {} {}", addr, user, method, path));
+    log(format!(
+        "[{}] {} {} {}",
+        addr,
+        user,
+        method,
+        url_decode(&path).unwrap()
+    ));
 
     let builder = DavHandler::builder();
     let dav_config = match path {
