@@ -4,4 +4,4 @@
 
 * custom server port
 * custom username/password
-* custom virtual dir
+* custom virtual dir with permission read/write

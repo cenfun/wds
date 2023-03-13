@@ -85,7 +85,7 @@
     "bundle": {
       "active": true,
       "category": "DeveloperTool",
-      "copyright": "",
+      "copyright": "MIT",
       "deb": {
         "depends": []
       },
@@ -99,7 +99,7 @@
         "icons/icon.png"
       ],
       "identifier": "wds",
-      "longDescription": "",
+      "longDescription": "WebDAV Server",
       "macOS": {
         "entitlements": null,
         "exceptionDomain": "",
@@ -110,7 +110,7 @@
       "resources": [
         "../assets/*"
       ],
-      "shortDescription": "",
+      "shortDescription": "WebDAV Server",
       "targets": "all",
       "windows": {
         "certificateThumbprint": null,
