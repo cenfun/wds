@@ -27,6 +27,8 @@ cookie = "0.17"
 urlencoding = "2.1"
 local-ip-address = "0.5"
 
+tauri-plugin-single-instance = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "dev" }
+
 [dependencies.tauri]
 version = "1.2"
 features = [ 

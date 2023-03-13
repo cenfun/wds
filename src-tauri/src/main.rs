@@ -5,7 +5,7 @@
 
 use std::{env, time::Duration};
 
-use tauri::{generate_context, generate_handler, Builder, WindowEvent};
+use tauri::{generate_context, generate_handler, Builder, Manager, WindowEvent};
 
 mod cache;
 
@@ -29,6 +29,13 @@ mod app;
 use app::on_init_before;
 use app::on_page_load;
 use app::on_window_moved;
+use utils::log_red;
+
+#[derive(Clone, serde::Serialize)]
+struct Payload {
+    args: Vec<String>,
+    cwd: String,
+}
 
 #[tokio::main]
 async fn main() {
@@ -60,6 +67,11 @@ fn start_app() {
             WindowEvent::Destroyed => println!("destroyed"),
             _ => {}
         })
+        .plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
+            log_red(format!("existed instance: {:?}", argv));
+            app.emit_all("single-instance", Payload { args: argv, cwd })
+                .unwrap();
+        }))
         .run(generate_context!())
         .expect("error while running application");
 }
