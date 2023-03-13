@@ -2,6 +2,7 @@
     "en": {
         "add_dir": "Add Dir",
         "add_profile": "Add Profile",
+        "address": "Address",
         "anonymous": "anonymous",
         "cancel": "Cancel",
         "clear": "Clear Logs",
@@ -30,6 +31,7 @@
     "zh": {
         "add_dir": "添加目录",
         "add_profile": "添加用户配置",
+        "address": "地址",
         "anonymous": "匿名",
         "cancel": "取消",
         "clear": "清理日志",

@@ -9,7 +9,7 @@
     >
       <div
         class="wds-layout-top vui-flex-column"
-        size="68.2%"
+        size="60%"
       >
         <ProfilePage
           @updated="onUpdated"
@@ -141,9 +141,10 @@ const loadSettings = async () => {
 
 };
 
+
 const onUpdated = async () => {
-    await loadSettings();
     await restart();
+    await loadSettings();
 };
 
 const onRestart = async () => {
@@ -152,29 +153,29 @@ const onRestart = async () => {
 
 // =====================================================================================
 
-onMounted(() => {
-
-    // log message
-    listen('message', (e) => {
-        const payload = e.payload;
-        if (!payload) {
-            log('invalid message', 'red');
-            return;
-        }
-        if (typeof payload === 'object') {
-            const { color, value } = payload;
-            if (value) {
-                log(value, color);
-                return;
-            }
-        }
-        log(payload);
-    });
-
-    loadSettings();
+onMounted(async () => {
 
     initTooltip();
 
+    await loadSettings();
+
+});
+
+// log message
+listen('message', (e) => {
+    const payload = e.payload;
+    if (!payload) {
+        log('invalid message', 'red');
+        return;
+    }
+    if (typeof payload === 'object') {
+        const { color, value } = payload;
+        if (value) {
+            log(value, color);
+            return;
+        }
+    }
+    log(payload);
 });
 
 // window.addEventListener('popstate', (e) => {
@@ -236,10 +237,10 @@ pane
 }
 
 .wds-page-header {
-    padding: 0 10px;
+    padding: 10px;
     font-weight: bold;
     border-top: 1px solid #eee;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #ddd;
     background: #eee;
 
     .wds-icon-label label {
@@ -251,7 +252,7 @@ pane
 }
 
 .wds-page-list {
-    padding: 10px;
+    padding: 5px;
     overflow-x: hidden;
     overflow-y: auto;
 }
@@ -271,13 +272,17 @@ table
     border-collapse: collapse;
 
     th {
+        padding: 8px 5px;
         white-space: nowrap;
         background-color: #eee;
     }
 
+    td {
+        padding: 5px;
+    }
+
     td,
     th {
-        padding: 5px;
         border: 1px solid #ddd;
     }
 

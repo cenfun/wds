@@ -124,7 +124,7 @@
     "systemTray": null,
     "windows": [
       {
-        "title": "wds",
+        "title": "WebDAV Server",
         "fullscreen": false,
         "resizable": true,
         "width": 600,

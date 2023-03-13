@@ -1,3 +1,4 @@
+use local_ip_address::list_afinet_netifas;
 use serde::{Deserialize, Serialize};
 
 use crate::common::get_data_file_object;
@@ -58,6 +59,8 @@ impl Default for ProfileItem {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Settings {
     #[serde(default)]
+    pub address: String,
+    #[serde(default)]
     pub port: u16,
     pub profile_list: Vec<ProfileItem>,
 }
@@ -65,6 +68,7 @@ pub struct Settings {
 impl Default for Settings {
     fn default() -> Self {
         Self {
+            address: "".into(),
             port: 8090,
             profile_list: vec![],
         }
@@ -179,15 +183,38 @@ pub fn get_profile_by_id(id: String) -> Option<ProfileItem> {
 
 //======================================================================================
 
+fn get_address(port: u16) -> String {
+    let mut my_ip = String::from("127.0.0.1");
+
+    let network_interfaces = list_afinet_netifas();
+    if let Ok(network_interfaces) = network_interfaces {
+        for (name, ip) in network_interfaces.iter() {
+            println!("{}:\t{:?}", name, ip);
+            let ip_str = ip.to_string();
+            if ip_str.starts_with("192.") || ip_str.starts_with("10.") {
+                my_ip = ip_str;
+            }
+        }
+    } else {
+        println!("Error getting network interfaces: {:?}", network_interfaces);
+    }
+
+    let address = format!("http://{}:{}", my_ip, port);
+
+    address
+}
+
 pub fn get_settings() -> Settings {
     if let Some(settings) = get_settings_cache() {
         return settings;
     }
 
-    let settings = match get_data_file_object("settings.json") {
+    let mut settings = match get_data_file_object("settings.json") {
         Ok(s) => s,
         Err(_) => Settings::default(),
     };
+
+    settings.address = get_address(settings.port);
 
     update_settings_cache(settings.clone());
 

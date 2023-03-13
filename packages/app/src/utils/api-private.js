@@ -54,3 +54,7 @@ export const save_dir = (action, id, data) => {
 export const restart = () => {
     return invoke_api('restart');
 };
+
+export const load_server_info = () => {
+    return invoke_api('load_server_info');
+};

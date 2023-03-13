@@ -5,13 +5,11 @@
 
 use std::{env, time::Duration};
 
-use tauri::{generate_context, generate_handler, Builder, Manager, WindowEvent};
+use tauri::{generate_context, generate_handler, Builder, WindowEvent};
 
 mod cache;
 
 mod common;
-use common::APP;
-use common::WINDOW;
 
 mod command;
 use command::invoke_get_settings;
@@ -26,12 +24,11 @@ use server::start_server;
 mod settings;
 
 mod utils;
-//use utils::log_green;
 
-mod window_state;
-use window_state::init_window_state;
-use window_state::save_window_state;
-use window_state::WindowState;
+mod app;
+use app::on_init_before;
+use app::on_page_load;
+use app::on_window_moved;
 
 #[tokio::main]
 async fn main() {
@@ -42,32 +39,12 @@ async fn main() {
 }
 
 fn start_app() {
-    let on_window_moved = fns::debounce(
-        |pos| {
-            let (x, y) = pos;
-            //println!("x {} y {}", x, y);
-
-            let window_state = WindowState { x, y };
-
-            save_window_state(window_state);
-        },
-        Duration::from_millis(500),
-    );
-
+    let _on_window_moved = fns::debounce(|pos| on_window_moved(pos), Duration::from_millis(500));
+    let _on_page_load = fns::debounce(|_| on_page_load(), Duration::from_millis(500));
     Builder::default()
         .setup(|app| {
-            //init app
-            APP.set(app.handle()).unwrap();
-
-            //init window
-            let win = app.get_window("main").unwrap();
-            win.set_focus().unwrap();
-            WINDOW.set(win).unwrap();
-
-            init_window_state();
-
+            on_init_before(app);
             start_server();
-
             Ok(())
         })
         .invoke_handler(generate_handler![
@@ -77,17 +54,10 @@ fn start_app() {
             invoke_save_port,
             invoke_save_profile
         ])
-        .on_page_load(|_window, _payload| {
-            //log_green("page loaded");
-        })
+        .on_page_load(move |_window, _payload| _on_page_load.call(true))
         .on_window_event(move |event| match event.event() {
-            WindowEvent::Moved(pos) => {
-                //println!("{:?}", pos);
-                on_window_moved.call((pos.x, pos.y));
-            }
-            WindowEvent::Destroyed => {
-                println!("destroyed")
-            }
+            WindowEvent::Moved(pos) => _on_window_moved.call((pos.x, pos.y)),
+            WindowEvent::Destroyed => println!("destroyed"),
             _ => {}
         })
         .run(generate_context!())

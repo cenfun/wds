@@ -34,7 +34,7 @@
             />
 
             <IconLabel
-              icon="folder"
+              icon="open"
               @click="onOpenFolder"
             />
           </VuiFlex>

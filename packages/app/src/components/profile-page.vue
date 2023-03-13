@@ -2,38 +2,29 @@
   <div class="wds-page wds-page-profile vui-flex-column">
     <div class="wds-page-header">
       <VuiFlex
-        gap="20px"
-        padding="5px 5px 5px 0"
+        gap="10px"
       >
         <IconLabel
-          icon="server"
-          size="20px"
-          label="WebDav Server"
+          icon="location"
+          :label="t('address')+':'"
           :button="false"
         />
-
-        <div
-          class="wds-port"
-          :tooltip="t('edit_port')"
-          @click="onEditPortClick"
-        >
-          {{ t('port') }}:
-          <span>{{ state.port }}</span>
+        <div class="wds-address">
+          {{ state.address }}
         </div>
-
-        <IconLabel
-          icon="reload"
-          :label="t('restart')"
-          @click="onRestartClick"
-        />
 
         <div class="vui-flex-empty" />
 
+        <IconLabel
+          icon="edit"
+          :label="t('edit_port')"
+          @click="onEditPortClick"
+        />
 
         <IconLabel
-          icon="plus"
-          :label="t('add_profile')"
-          @click="onAddProfileClick"
+          icon="restart"
+          :label="t('restart')"
+          @click="onRestartClick"
         />
       </VuiFlex>
     </div>
@@ -46,7 +37,7 @@
             class="wds-profile-item"
           >
             <tr>
-              <th>
+              <th colspan="3">
                 <VuiFlex gap="10px">
                   <IconLabel
                     icon="user"
@@ -98,24 +89,24 @@
             <tr
               v-for="(dir, j) in item.dir_list"
               :key="j"
+              class="wds-dir-item"
             >
               <td>
-                <VuiFlex
-                  gap="10px"
-                  class="wds-dir-item"
-                >
-                  <div class="wds-dir-permission">
-                    {{ dir.permission }}
-                  </div>
-                  <div class="wds-dir-name">
-                    {{ dir.name }}
-                    <div class="wds-dir-path">
-                      {{ dir.path }}
-                    </div>
-                  </div>
-
-                  <div class="vui-flex-auto" />
-                </VuiFlex>
+                <IconLabel
+                  icon="folder"
+                  :label="dir.name"
+                  @click="onEditDirClick(item,dir)"
+                />
+              </td>
+              <td>
+                <div class="wds-dir-path">
+                  {{ dir.path }}
+                </div>
+              </td>
+              <td>
+                <div class="wds-dir-permission">
+                  {{ dir.permission }}
+                </div>
               </td>
               <td>
                 <VuiFlex
@@ -137,13 +128,13 @@
               </td>
             </tr>
             <tr>
-              <td colspan="2">
+              <td colspan="4">
                 <VuiFlex
                   gap="10px"
                   class="wds-dir-add"
                 >
                   <IconLabel
-                    icon="plus"
+                    icon="folder-add"
                     :label="t('add_dir')"
                     @click="onAddDirClick(item)"
                   />
@@ -168,6 +159,14 @@
       >
         {{ t('add_profile') }}
       </VuiButton>
+    </div>
+
+    <div class="wds-page-toolbar">
+      <IconLabel
+        icon="user-add"
+        :label="t('add_profile')"
+        @click="onAddProfileClick"
+      />
     </div>
 
     <VuiModal
@@ -339,17 +338,17 @@ const onUpdated = () => {
     }
 }
 
-.wds-port {
-    cursor: pointer;
-
-    &:hover {
-        color: #3a9bfc;
-    }
+.wds-address {
+    margin-left: -5px;
+    color: green;
+    font-weight: normal;
+    font-family: Menlo, Consolas, monospace;
 }
 
 .wds-username {
     padding: 0 3px;
-    font-family: "Courier New", Courier, monospace;
+    font-weight: normal;
+    font-family: Menlo, Consolas, monospace;
     border-radius: 5px;
     background-color: #eee;
 }
@@ -357,12 +356,14 @@ const onUpdated = () => {
 .wds-password {
     padding: 0 3px;
     color: #fff;
-    font-family: "Courier New", Courier, monospace;
+    font-weight: normal;
+    font-family: Menlo, Consolas, monospace;
     border-radius: 5px;
     background-color: #666;
 }
 
 .wds-dir-permission {
+    display: inline-block;
     padding: 3px 5px;
     font-size: 12px;
     border-radius: 5px;
@@ -370,15 +371,11 @@ const onUpdated = () => {
 }
 
 .wds-dir-name {
-    flex-shrink: 1;
-    font-weight: bold;
+    color: #000;
 }
 
 .wds-dir-path {
-    flex-shrink: 1;
     color: gray;
-    font-weight: normal;
-    overflow: hidden;
 }
 
 </style>

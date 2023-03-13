@@ -21,12 +21,11 @@ use tokio::sync::mpsc;
 use urlencoding::{decode as url_decode, encode as url_encode};
 
 use crate::settings::get_settings;
-use crate::utils::{delay, log};
-use crate::utils::{log_green, log_red};
+use crate::utils::{delay, log, log_green, log_magenta, log_red};
 
 use crate::cache::get_secret_key;
 use crate::cache::get_sender;
-use crate::cache::remove_secret_key;
+use crate::cache::remove_cache;
 use crate::cache::update_sender;
 
 use crate::settings::get_profile_by_id;
@@ -63,7 +62,7 @@ impl Claims {
 //===============================================================================
 
 pub async fn restart() -> bool {
-    log("restart server ...");
+    log_magenta("restart server ...");
     if let Some(sender) = get_sender() {
         let _ = sender.send(1).await;
         delay(100);
@@ -74,7 +73,7 @@ pub async fn restart() -> bool {
 }
 
 pub fn start_server() {
-    remove_secret_key();
+    remove_cache();
     tokio::spawn(async {
         let settings = get_settings();
         //println!("{:?}", settings);
@@ -95,7 +94,7 @@ pub fn start_server() {
 
         let graceful = server.with_graceful_shutdown(async {
             rx.recv().await;
-            log("shutdown server ...");
+            log_red("shutdown server ...");
         });
 
         //Await the `server` receiving the signal...
