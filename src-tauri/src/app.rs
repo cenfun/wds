@@ -154,7 +154,7 @@ pub fn on_page_load() {
                 if ip.is_empty() {
                     continue;
                 }
-                println!("{} {}", host, ip);
+                //println!("{} {}", host, ip);
                 let port = get_settings().port;
                 log_green(format!("public address: http://{}:{}", ip, port));
                 break;

@@ -188,8 +188,8 @@ fn get_address(port: u16) -> String {
 
     let network_interfaces = list_afinet_netifas();
     if let Ok(network_interfaces) = network_interfaces {
-        for (name, ip) in network_interfaces.iter() {
-            println!("{}:\t{:?}", name, ip);
+        for (_name, ip) in network_interfaces.iter() {
+            // println!("{}:\t{:?}", name, ip);
             let ip_str = ip.to_string();
             if ip_str.starts_with("192.") || ip_str.starts_with("10.") {
                 my_ip = ip_str;

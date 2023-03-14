@@ -27,7 +27,7 @@ impl Error {
 
 //=============================================================================================
 
-fn get_default_file_path(filename: impl Into<String>) -> PathBuf {
+pub fn get_default_file_path(filename: impl Into<String>) -> PathBuf {
     let app = APP.get().expect("app is not initialized");
     let resource_file = format!("../assets/{}", filename.into());
     app.path_resolver().resolve_resource(resource_file).unwrap()

@@ -222,7 +222,7 @@ fn check_token(req: &Request<HBody>, addr: &SocketAddr) -> Result<ProfileItem, R
             }
             Err(e) => {
                 // when token failed, continue check authorization, do not return
-                log(format!("[{}] {}", addr, e.to_string()));
+                log_red(format!("[{}] {}", addr, e.to_string()));
             }
         }
     }

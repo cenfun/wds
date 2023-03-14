@@ -108,7 +108,7 @@
         "signingIdentity": null
       },
       "resources": [
-        "../assets/*"
+        "../assets/**/*"
       ],
       "shortDescription": "WebDAV Server",
       "targets": "all",
