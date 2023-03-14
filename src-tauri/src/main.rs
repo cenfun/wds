@@ -24,12 +24,12 @@ use server::start_server;
 mod settings;
 
 mod utils;
+use utils::log_red;
 
 mod app;
 use app::on_init_before;
 use app::on_page_load;
 use app::on_window_moved;
-use utils::log_red;
 
 #[derive(Clone, serde::Serialize)]
 struct Payload {
@@ -41,7 +41,6 @@ struct Payload {
 async fn main() {
     #[cfg(debug_assertions)]
     env::set_var("RUST_BACKTRACE", "1");
-
     start_app();
 }
 

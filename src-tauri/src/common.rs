@@ -4,7 +4,6 @@ use std::fs::write;
 use std::path::PathBuf;
 
 use once_cell::sync::OnceCell;
-
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::to_string_pretty;
@@ -34,7 +33,7 @@ fn get_default_file_path(filename: impl Into<String>) -> PathBuf {
     app.path_resolver().resolve_resource(resource_file).unwrap()
 }
 
-fn get_data_dir() -> PathBuf {
+pub fn get_data_dir() -> PathBuf {
     let app = APP.get().expect("app is not initialized");
     let data_dir = app.path_resolver().app_data_dir().unwrap();
 
@@ -49,7 +48,7 @@ fn get_data_dir() -> PathBuf {
 //=============================================================================================
 //data file api
 
-fn get_data_file_path(filename: impl Into<String>) -> PathBuf {
+pub fn get_data_file_path(filename: impl Into<String>) -> PathBuf {
     let data_dir = get_data_dir();
     data_dir.join(filename.into())
 }

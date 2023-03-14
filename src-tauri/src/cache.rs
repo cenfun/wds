@@ -1,6 +1,6 @@
-use once_cell::sync::Lazy;
 use std::sync::Mutex;
 
+use once_cell::sync::Lazy;
 use tokio::sync::mpsc::Sender;
 
 use crate::settings::Settings;

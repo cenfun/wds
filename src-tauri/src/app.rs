@@ -1,11 +1,22 @@
 use serde::{Deserialize, Serialize};
 use tauri::{App, Manager, PhysicalPosition, Position::Physical};
 
+// use futures::executor::block_on;
+// use rusqlite::Result;
+// use tokio_rusqlite::Connection;
+// use uuid::Uuid;
+// use tokio_rusqlite::Connection;
+// pub static DB: OnceCell<Connection> = OnceCell::new();
+
 use crate::common::get_data_file_object;
+//use crate::common::get_data_file_path;
 use crate::common::save_data_file_object;
 use crate::common::APP;
+//use crate::common::DB;
 use crate::common::WINDOW;
+
 use crate::settings::get_settings;
+
 use crate::utils::log_green;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -32,7 +43,39 @@ pub fn on_init_before(app: &mut App) {
     WINDOW.set(win).unwrap();
 
     init_window_state();
+
+    // block_on(init_db()).unwrap();
 }
+
+// pub async fn init_db() -> Result<()> {
+//     let db_path = get_data_file_path("wds.db");
+//     let db = Connection::open(db_path).await?;
+//     db.call(|conn| {
+//         conn.execute(
+//             "CREATE TABLE IF NOT EXISTS profile (
+//                 id  TEXT PRIMARY KEY UNIQUE,
+//                 username  TEXT,
+//                 password  TEXT
+//             )",
+//             [],
+//         )?;
+
+//         let uuid = Uuid::new_v4().to_string();
+//         conn.execute(
+//             "INSERT INTO profile (id, username, password) VALUES (?1, ?2, ?3)",
+//             (uuid, "cenfun", "cenfun"),
+//         )?;
+
+//         Ok::<_, rusqlite::Error>(())
+//     })
+//     .await?;
+
+//     println!("db connected");
+
+//     DB.set(db).unwrap();
+
+//     Ok(())
+// }
 
 //===============================================================================================
 
