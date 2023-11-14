@@ -1,6 +1,6 @@
 # WebDAV Server (WDS)
 
-![](/assets/screenshot.png)
+![](/docs/screenshot.png)
 
 * custom server port
 * custom username/password
