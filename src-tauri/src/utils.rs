@@ -2,7 +2,7 @@ use std::{thread::sleep, time::Duration};
 
 use serde::Serialize;
 
-use crate::common::WINDOW;
+//use crate::common::WINDOW;
 
 // ================================================================================================
 
@@ -35,8 +35,8 @@ pub fn log_color<T: Into<String>>(input: T, color: &str) {
         _ => println!("{}", s),
     }
 
-    let win = WINDOW.get().expect("window is not initialized");
-    win.emit("message", Message { color: c, value: s }).unwrap();
+    //let win = WINDOW.get().expect("window is not initialized");
+    // win.emit("message", Message { color: c, value: s }).unwrap();
 }
 
 #[allow(dead_code)]

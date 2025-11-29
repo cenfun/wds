@@ -5,7 +5,8 @@
 
 use std::{env, time::Duration};
 
-use tauri::{generate_context, generate_handler, Builder, Manager, WindowEvent};
+use tauri::{generate_context, generate_handler, Builder, WindowEvent};
+use tauri::{AppHandle, Manager};
 
 mod cache;
 
@@ -41,13 +42,13 @@ struct Payload {
 pub fn run() {
     #[cfg(debug_assertions)]
     env::set_var("RUST_BACKTRACE", "1");
-    start_app();
-}
 
-fn start_app() {
     let _on_window_moved = fns::debounce(|pos| on_window_moved(pos), Duration::from_millis(500));
     let _on_page_load = fns::debounce(|_| on_page_load(), Duration::from_millis(500));
-    Builder::default()
+
+    let mut builder = tauri::Builder::default();
+
+    builder = builder
         .setup(|app| {
             on_init_before(app);
             start_server();
@@ -61,16 +62,29 @@ fn start_app() {
             invoke_save_profile
         ])
         .on_page_load(move |_window, _payload| _on_page_load.call(true))
-        .on_window_event(move |event| match event.event() {
-            WindowEvent::Moved(pos) => _on_window_moved.call((pos.x, pos.y)),
-            WindowEvent::Destroyed => println!("destroyed"),
-            _ => {}
-        })
         .plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
             log_red(format!("existed instance: {:?}", argv));
-            app.emit_all("single-instance", Payload { args: argv, cwd })
-                .unwrap();
-        }))
-        .run(generate_context!())
-        .expect("error while running application");
+            app.get_webview_window("main")
+                .expect("no main window")
+                .set_focus();
+        }));
+    // .on_window_event(move |event| match event.event() {
+    //     WindowEvent::Moved(pos) => _on_window_moved.call((pos.x, pos.y)),
+    //     WindowEvent::Destroyed => println!("destroyed"),
+    //     _ => {}
+    // });
+
+    #[cfg(desktop)]
+    {
+        builder = builder.plugin(tauri_plugin_single_instance::init(|app, args, cwd| {
+            let _ = app
+                .get_webview_window("main")
+                .expect("no main window")
+                .set_focus();
+        }));
+    }
+
+    builder
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
 }

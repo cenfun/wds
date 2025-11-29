@@ -35,10 +35,10 @@ impl Default for WindowState {
 
 pub fn on_init_before(app: &mut App) {
     //init app
-    APP.set(app.handle()).unwrap();
+    APP.set(app.handle().clone()).unwrap();
 
     //init window
-    let win = app.get_window("main").unwrap();
+    let win = app.get_webview_window("main").unwrap();
     win.set_focus().unwrap();
     WINDOW.set(win).unwrap();
 

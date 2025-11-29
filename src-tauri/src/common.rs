@@ -8,8 +8,8 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::to_string_pretty;
 
-use tauri::Window;
-pub static WINDOW: OnceCell<Window> = OnceCell::new();
+use tauri::webview::WebviewWindow;
+pub static WINDOW: OnceCell<WebviewWindow> = OnceCell::new();
 
 use tauri::AppHandle;
 pub static APP: OnceCell<AppHandle> = OnceCell::new();
