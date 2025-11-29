@@ -8,3 +8,10 @@
 
 ## Downloads
  - [https://github.com/cenfun/wds/releases/](https://github.com/cenfun/wds/releases/)
+
+
+ ## Update Tauri Version
+ ```sh
+cd src-tauri
+cargo update
+ ```
