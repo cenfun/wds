@@ -3,16 +3,21 @@ use std::fs::read_to_string;
 use std::fs::write;
 use std::path::PathBuf;
 
-use once_cell::sync::OnceCell;
+use std::sync::OnceLock;
+//use once_cell::sync::OnceCell;
+
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::to_string_pretty;
 
+use tauri::path::BaseDirectory;
 use tauri::webview::WebviewWindow;
-pub static WINDOW: OnceCell<WebviewWindow> = OnceCell::new();
+use tauri::Manager;
+
+pub static WINDOW: OnceLock<WebviewWindow> = OnceLock::new();
 
 use tauri::AppHandle;
-pub static APP: OnceCell<AppHandle> = OnceCell::new();
+pub static APP: OnceLock<AppHandle> = OnceLock::new();
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Error {
@@ -30,12 +35,14 @@ impl Error {
 pub fn get_default_file_path(filename: impl Into<String>) -> PathBuf {
     let app = APP.get().expect("app is not initialized");
     let resource_file = format!("../assets/{}", filename.into());
-    app.path_resolver().resolve_resource(resource_file).unwrap()
+    app.path()
+        .resolve(resource_file, BaseDirectory::Config)
+        .unwrap()
 }
 
 pub fn get_data_dir() -> PathBuf {
     let app = APP.get().expect("app is not initialized");
-    let data_dir = app.path_resolver().app_data_dir().unwrap();
+    let data_dir = app.path().app_data_dir().unwrap();
 
     //create data dir if not exist
     if !data_dir.exists() {
