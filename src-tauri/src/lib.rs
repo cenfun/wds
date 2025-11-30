@@ -5,8 +5,9 @@
 
 use std::{env, time::Duration};
 
-use tauri::{generate_context, generate_handler, Builder, WindowEvent};
-use tauri::{AppHandle, Manager};
+use tauri::generate_handler;
+//use tauri::Manager;
+//generate_context,  Builder, WindowEvent
 
 mod cache;
 
@@ -18,6 +19,8 @@ use command::invoke_restart;
 use command::invoke_save_dir;
 use command::invoke_save_port;
 use command::invoke_save_profile;
+
+use common::set_window_focus;
 
 mod server;
 use server::start_server;
@@ -32,11 +35,11 @@ use app::on_init_before;
 use app::on_page_load;
 use app::on_window_moved;
 
-#[derive(Clone, serde::Serialize)]
-struct Payload {
-    args: Vec<String>,
-    cwd: String,
-}
+// #[derive(Clone, serde::Serialize)]
+// struct Payload {
+//     args: Vec<String>,
+//     cwd: String,
+// }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -61,13 +64,8 @@ pub fn run() {
             invoke_save_port,
             invoke_save_profile
         ])
-        .on_page_load(move |_window, _payload| _on_page_load.call(true))
-        .plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
-            log_red(format!("existed instance: {:?}", argv));
-            app.get_webview_window("main")
-                .expect("no main window")
-                .set_focus();
-        }));
+        .on_page_load(move |_window, _payload| _on_page_load.call(true));
+
     // .on_window_event(move |event| match event.event() {
     //     WindowEvent::Moved(pos) => _on_window_moved.call((pos.x, pos.y)),
     //     WindowEvent::Destroyed => println!("destroyed"),
@@ -76,11 +74,9 @@ pub fn run() {
 
     #[cfg(desktop)]
     {
-        builder = builder.plugin(tauri_plugin_single_instance::init(|app, args, cwd| {
-            let _ = app
-                .get_webview_window("main")
-                .expect("no main window")
-                .set_focus();
+        builder = builder.plugin(tauri_plugin_single_instance::init(|_app, _args, _cwd| {
+            log_red(format!("existed instance: {:?}", _args));
+            set_window_focus();
         }));
     }
 

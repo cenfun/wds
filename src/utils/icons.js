@@ -1,14 +1,17 @@
-const context = require.context('../images/icons', true, /\.svg$/);
-const paths = context.keys();
+
+const modules = import.meta.glob('../images/icons/*.svg', {
+    import: 'default',
+    query: '?raw',
+    eager: true
+});
+
 const icons = {};
-paths.forEach((path) => {
+
+Object.keys(modules).forEach((path) => {
     const list = path.toLowerCase().split('/');
     const filename = list.pop();
     const iconName = filename.slice(0, -4);
-    const dataUrl = context(path);
-    const header = 'data:image/svg+xml;base64,';
-    const b64 = dataUrl.slice(header.length);
-    const svg = atob(b64);
+    const svg = modules[path];
     icons[iconName] = svg;
 });
 

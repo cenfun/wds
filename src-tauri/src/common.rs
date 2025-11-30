@@ -52,6 +52,11 @@ pub fn get_data_dir() -> PathBuf {
     data_dir
 }
 
+pub fn set_window_focus() {
+    let win = WINDOW.get().expect("window is not initialized");
+    let _ = win.set_focus();
+}
+
 //=============================================================================================
 //data file api
 

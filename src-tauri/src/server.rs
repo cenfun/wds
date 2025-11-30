@@ -17,7 +17,10 @@ use hyper::{
 };
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
+
+use tokio::runtime::Runtime;
 use tokio::sync::mpsc;
+
 use urlencoding::{decode as url_decode, encode as url_encode};
 
 use crate::settings::get_settings;
@@ -74,7 +77,8 @@ pub async fn restart() -> bool {
 
 pub fn start_server() {
     remove_cache();
-    tokio::spawn(async {
+    let rt = Runtime::new().unwrap();
+    rt.spawn(async {
         let settings = get_settings();
         //println!("{:?}", settings);
 
