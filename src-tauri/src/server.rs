@@ -69,52 +69,52 @@ pub fn start_server() {
     std::thread::spawn(|| {
         let rt = Runtime::new().unwrap();
         rt.block_on(async {
-        let settings = get_settings();
-        //println!("{:?}", settings);
+            let settings = get_settings();
+            //println!("{:?}", settings);
 
-        let addr: SocketAddr = ([0, 0, 0, 0], settings.port).into();
+            let addr: SocketAddr = ([0, 0, 0, 0], settings.port).into();
 
-        log_green(format!("start server listening on {:?}", addr));
+            log_green(format!("start server listening on {:?}", addr));
 
-        let (tx, mut rx) = mpsc::channel::<i32>(100);
-        update_sender(tx);
+            let (tx, mut rx) = mpsc::channel::<i32>(100);
+            update_sender(tx);
 
-        let listener = TcpListener::bind(addr).await.unwrap();
+            let listener = TcpListener::bind(addr).await.unwrap();
 
-        loop {
-            tokio::select! {
-                result = listener.accept() => {
-                    let (stream, remote_addr) = match result {
-                        Ok(v) => v,
-                        Err(e) => {
-                            eprintln!("accept error: {}", e);
-                            continue;
-                        }
-                    };
-                    let io = TokioIo::new(stream);
-                    tokio::spawn(async move {
-                        let service = service_fn(move |req| {
-                            request_handle(req, remote_addr)
-                        });
-                        if let Err(e) = hyper::server::conn::http1::Builder::new()
-                            .serve_connection(io, service)
-                            .await
-                        {
-                            if let Some(source) = std::error::Error::source(&e) {
-                                eprintln!("connection error: {}", source);
-                            } else {
-                                eprintln!("connection error: {}", e);
+            loop {
+                tokio::select! {
+                    result = listener.accept() => {
+                        let (stream, remote_addr) = match result {
+                            Ok(v) => v,
+                            Err(e) => {
+                                eprintln!("accept error: {}", e);
+                                continue;
                             }
-                        }
-                    });
-                }
-                _ = rx.recv() => {
-                    log_red("shutdown server ...");
-                    break;
+                        };
+                        let io = TokioIo::new(stream);
+                        tokio::spawn(async move {
+                            let service = service_fn(move |req| {
+                                request_handle(req, remote_addr)
+                            });
+                            if let Err(e) = hyper::server::conn::http1::Builder::new()
+                                .serve_connection(io, service)
+                                .await
+                            {
+                                if let Some(source) = std::error::Error::source(&e) {
+                                    eprintln!("connection error: {}", source);
+                                } else {
+                                    eprintln!("connection error: {}", e);
+                                }
+                            }
+                        });
+                    }
+                    _ = rx.recv() => {
+                        log_red("shutdown server ...");
+                        break;
+                    }
                 }
             }
-        }
-    })
+        })
     });
 }
 
@@ -270,7 +270,10 @@ fn check_login(req: &Request<HBody>, addr: &SocketAddr) -> Response<DBody> {
         }
     }
 
-    log(format!("[{}] no credentials, requesting authentication", addr));
+    log(format!(
+        "[{}] no credentials, requesting authentication",
+        addr
+    ));
     res_unauthorized()
 }
 

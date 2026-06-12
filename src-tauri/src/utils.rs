@@ -1,8 +1,9 @@
 use std::{thread::sleep, time::Duration};
 
-//use serde::Serialize;
+use serde::Serialize;
+use tauri::Emitter;
 
-//use crate::common::WINDOW;
+use crate::common::WINDOW;
 
 // ================================================================================================
 
@@ -14,11 +15,11 @@ pub fn delay(ms: u64) {
 // ================================================================================================
 
 // the payload type must implement `Serialize` and `Clone`.
-// #[derive(Clone, Serialize)]
-// pub struct Message<'a> {
-//     color: &'a str,
-//     value: String,
-// }
+#[derive(Clone, Serialize)]
+pub struct Message {
+    pub color: String,
+    pub value: String,
+}
 
 pub fn log_color<T: Into<String>>(input: T, color: &str) {
     let s = input.into();
@@ -35,8 +36,15 @@ pub fn log_color<T: Into<String>>(input: T, color: &str) {
         _ => println!("{}", s),
     }
 
-    //let win = WINDOW.get().expect("window is not initialized");
-    // win.emit("message", Message { color: c, value: s }).unwrap();
+    if let Some(win) = WINDOW.get() {
+        let _ = win.emit(
+            "message",
+            Message {
+                color: c.to_string(),
+                value: s,
+            },
+        );
+    }
 }
 
 #[allow(dead_code)]
