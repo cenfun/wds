@@ -28,10 +28,11 @@ once_cell = "1"
 rand = "0.8"
 fns = "0.0"
 
-dav-server = { version = "0.5" }
+dav-server = { version = "0.11.0", features = ["hyper"] }
 tokio = { version = "1.48", features = ["macros", "rt-multi-thread", "full"] }
-hyper = { version = "0.14", features = ["server", "tcp", "http1", "http2"] }
-reqwest = { version = "0.11", features = ["blocking", "json"] }
+hyper = { version = "1", features = ["server", "http1", "http2"] }
+hyper-util = { version = "0.1", features = ["server", "tokio"] }
+reqwest = { version = "0.12", features = ["blocking", "json"] }
 
 jsonwebtoken = "8.2"
 http-auth-basic = "0.3"

@@ -9,32 +9,21 @@ use dav_server::{
     DavHandler,
 };
 use http_auth_basic::Credentials;
-use hyper::server::conn::AddrStream;
-use hyper::{
-    header::{HeaderValue, AUTHORIZATION, COOKIE, LOCATION, SET_COOKIE, WWW_AUTHENTICATE},
-    service::{make_service_fn, service_fn},
-    Body as HBody, HeaderMap, Request, Response, Server, StatusCode,
-};
+use hyper::body::Incoming as HBody;
+use hyper::header::{HeaderValue, AUTHORIZATION, COOKIE, LOCATION, SET_COOKIE, WWW_AUTHENTICATE};
+use hyper::service::service_fn;
+use hyper::{HeaderMap, Request, Response, StatusCode};
+use hyper_util::rt::TokioIo;
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
-
+use tokio::net::TcpListener;
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc;
-
 use urlencoding::{decode as url_decode, encode as url_encode};
 
-use crate::settings::get_settings;
+use crate::cache::{get_secret_key, get_sender, remove_cache, update_sender};
+use crate::settings::{get_profile_by_id, get_profile_by_login, get_settings, ProfileItem};
 use crate::utils::{delay, log, log_green, log_magenta, log_red};
-
-use crate::cache::get_secret_key;
-use crate::cache::get_sender;
-use crate::cache::remove_cache;
-use crate::cache::update_sender;
-
-use crate::settings::get_profile_by_id;
-use crate::settings::get_profile_by_login;
-
-use crate::settings::ProfileItem;
 
 static TOKEN_KEY: &str = "wds-token";
 #[derive(Debug, Serialize, Deserialize)]
@@ -77,34 +66,55 @@ pub async fn restart() -> bool {
 
 pub fn start_server() {
     remove_cache();
-    let rt = Runtime::new().unwrap();
-    rt.spawn(async {
+    std::thread::spawn(|| {
+        let rt = Runtime::new().unwrap();
+        rt.block_on(async {
         let settings = get_settings();
         //println!("{:?}", settings);
 
         let addr: SocketAddr = ([0, 0, 0, 0], settings.port).into();
-
-        let make_service = make_service_fn(move |conn: &AddrStream| {
-            let remote_addr = conn.remote_addr();
-            async move { Ok::<_, Infallible>(service_fn(move |req| request_handle(req, remote_addr))) }
-        });
 
         log_green(format!("start server listening on {:?}", addr));
 
         let (tx, mut rx) = mpsc::channel::<i32>(100);
         update_sender(tx);
 
-        let server = Server::bind(&addr).serve(make_service);
+        let listener = TcpListener::bind(addr).await.unwrap();
 
-        let graceful = server.with_graceful_shutdown(async {
-            rx.recv().await;
-            log_red("shutdown server ...");
-        });
-
-        //Await the `server` receiving the signal...
-        if let Err(e) = graceful.await {
-            eprintln!("server error: {}", e);
+        loop {
+            tokio::select! {
+                result = listener.accept() => {
+                    let (stream, remote_addr) = match result {
+                        Ok(v) => v,
+                        Err(e) => {
+                            eprintln!("accept error: {}", e);
+                            continue;
+                        }
+                    };
+                    let io = TokioIo::new(stream);
+                    tokio::spawn(async move {
+                        let service = service_fn(move |req| {
+                            request_handle(req, remote_addr)
+                        });
+                        if let Err(e) = hyper::server::conn::http1::Builder::new()
+                            .serve_connection(io, service)
+                            .await
+                        {
+                            if let Some(source) = std::error::Error::source(&e) {
+                                eprintln!("connection error: {}", source);
+                            } else {
+                                eprintln!("connection error: {}", e);
+                            }
+                        }
+                    });
+                }
+                _ = rx.recv() => {
+                    log_red("shutdown server ...");
+                    break;
+                }
+            }
         }
+    })
     });
 }
 
@@ -255,10 +265,12 @@ fn check_login(req: &Request<HBody>, addr: &SocketAddr) -> Response<DBody> {
                     return res_token(t, location);
                 }
             }
+            log_red(format!("[{}] invalid credentials", addr));
+            return res_unauthorized();
         }
     }
 
-    log_red(format!("[{}] login failed", addr));
+    log(format!("[{}] no credentials, requesting authentication", addr));
     res_unauthorized()
 }
 

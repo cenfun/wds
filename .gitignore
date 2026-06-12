@@ -4,3 +4,5 @@
 /src-tauri/target
 /src-tauri/gen/schemas
 /src-tauri/Cargo.lock
+/.codegraph
+/.mcp.json
