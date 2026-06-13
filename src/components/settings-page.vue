@@ -51,6 +51,7 @@ watch(() => state.language, () => {
 <style lang="scss">
 .wds-page-settings {
     position: relative;
+    min-width: 320px;
     padding: 10px;
     overflow-y: auto;
 }

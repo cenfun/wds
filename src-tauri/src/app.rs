@@ -156,7 +156,12 @@ pub fn on_page_load() {
                 }
                 //println!("{} {}", host, ip);
                 let port = get_settings().port;
-                log_green(format!("public address: http://{}:{}", ip, port));
+                log_green(format!(
+                    "public address: http://{}:{} (wds v{})",
+                    ip,
+                    port,
+                    env!("CARGO_PKG_VERSION")
+                ));
                 break;
             }
         }

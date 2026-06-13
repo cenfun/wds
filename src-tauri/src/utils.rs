@@ -3,7 +3,7 @@ use std::{thread::sleep, time::Duration};
 use serde::Serialize;
 use tauri::Emitter;
 
-use crate::common::WINDOW;
+use crate::common::{APP, WINDOW};
 
 // ================================================================================================
 
@@ -36,7 +36,16 @@ pub fn log_color<T: Into<String>>(input: T, color: &str) {
         _ => println!("{}", s),
     }
 
-    if let Some(win) = WINDOW.get() {
+    // Try to emit to UI via AppHandle (thread-safe, works from any thread)
+    if let Some(app) = APP.get() {
+        let _ = app.emit(
+            "message",
+            Message {
+                color: c.to_string(),
+                value: s,
+            },
+        );
+    } else if let Some(win) = WINDOW.get() {
         let _ = win.emit(
             "message",
             Message {

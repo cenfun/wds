@@ -74,7 +74,11 @@ pub fn start_server() {
 
             let addr: SocketAddr = ([0, 0, 0, 0], settings.port).into();
 
-            log_green(format!("start server listening on {:?}", addr));
+            log_green(format!(
+                "start server listening on {:?} (wds v{})",
+                addr,
+                env!("CARGO_PKG_VERSION")
+            ));
 
             let (tx, mut rx) = mpsc::channel::<i32>(100);
             update_sender(tx);
