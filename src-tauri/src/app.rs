@@ -108,11 +108,11 @@ pub fn init_window_state() {
 
     let screen_size = screen.size();
     let screen_width = screen_size.width as i32;
-    let screen_height = screen_size.width as i32;
+    let screen_height = screen_size.height as i32;
 
     let window_size = win.outer_size().unwrap();
     let window_width = window_size.width as i32;
-    let window_height = window_size.width as i32;
+    let window_height = window_size.height as i32;
 
     if x + window_width > screen_x + screen_width {
         x = screen_x + screen_width - window_width;

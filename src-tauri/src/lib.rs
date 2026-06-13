@@ -6,8 +6,7 @@
 use std::{env, time::Duration};
 
 use tauri::generate_handler;
-//use tauri::Manager;
-//generate_context,  Builder, WindowEvent
+use tauri::WindowEvent;
 
 mod cache;
 
@@ -64,13 +63,12 @@ pub fn run() {
             invoke_save_port,
             invoke_save_profile
         ])
-        .on_page_load(move |_window, _payload| _on_page_load.call(true));
-
-    // .on_window_event(move |event| match event.event() {
-    //     WindowEvent::Moved(pos) => _on_window_moved.call((pos.x, pos.y)),
-    //     WindowEvent::Destroyed => println!("destroyed"),
-    //     _ => {}
-    // });
+        .on_page_load(move |_window, _payload| _on_page_load.call(true))
+        .on_window_event(move |_window, event| match event {
+            WindowEvent::Moved(position) => _on_window_moved.call((position.x, position.y)),
+            WindowEvent::Destroyed => println!("destroyed"),
+            _ => {}
+        });
 
     builder = builder.plugin(tauri_plugin_dialog::init());
 
