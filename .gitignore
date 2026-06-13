@@ -6,3 +6,4 @@
 /src-tauri/Cargo.lock
 /.codegraph
 /.mcp.json
+/.claude

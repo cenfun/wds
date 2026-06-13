@@ -4,13 +4,17 @@
 <script setup>
 import { onMounted } from 'vue';
 
-import FpsDetector from 'fps-detector';
+import fd from 'fps-detector';
 
 onMounted(() => {
-    new FpsDetector('.wds-fps-detector', {
-        width: 120,
-        height: 30
-    });
+
+    if (import.meta.env.DEV) {
+        const FpsDetector = fd.default;
+        new FpsDetector('.wds-fps-detector', {
+            width: 120,
+            height: 30
+        });
+    }
 
 });
 

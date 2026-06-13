@@ -17,7 +17,7 @@
 
         <div class="vui-flex-empty" />
 
-        <FpsDetector v-if="isDev" />
+        <FpsDetector />
 
         <IconLabel
           icon="settings"
@@ -42,8 +42,6 @@ import { useTranslation } from 'i18next-vue';
 const { t } = useTranslation();
 
 const { VuiFlex } = components;
-
-const isDev = import.meta.env.DEV;
 
 const state = inject('state');
 
