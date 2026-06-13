@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "wds",
+        "title": "WDS",
         "width": 800,
         "height": 600
       }
