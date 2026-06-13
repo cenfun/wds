@@ -115,6 +115,7 @@ const {
 
 
 const editor = inject('editor');
+const state = inject('state');
 
 const el = ref(null);
 let $el;
@@ -140,6 +141,22 @@ const onSaveClick = async () => {
         ) {
             log(t('no_changes'));
             editor.visible = false;
+            return;
+        }
+    }
+
+    // check duplicate dir name (case-insensitive)
+    const profile = state.profile_list.find((p) => p.id === editor.profile_id);
+    if (profile) {
+        const newName = (editor.data.name || '').toLowerCase();
+        const duplicate = profile.dir_list.some((d) => {
+            if (action === 'update' && d.id === editor.previous?.id) {
+                return false;
+            }
+            return (d.name || '').toLowerCase() === newName;
+        });
+        if (duplicate) {
+            log(t('name_exists'), 'red');
             return;
         }
     }

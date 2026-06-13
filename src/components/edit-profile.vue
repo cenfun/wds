@@ -77,6 +77,17 @@ const {
 
 
 const editor = inject('editor');
+const state = inject('state');
+
+const checkDuplicateUsername = (action) => {
+    const newName = (editor.data.username || '').toLowerCase();
+    return state.profile_list.some((p) => {
+        if (action === 'update' && p.id === editor.previous?.id) {
+            return false;
+        }
+        return (p.username || '').toLowerCase() === newName;
+    });
+};
 
 const onSaveClick = async () => {
 
@@ -91,6 +102,11 @@ const onSaveClick = async () => {
             editor.visible = false;
             return;
         }
+    }
+
+    if (checkDuplicateUsername(action)) {
+        log(t('username_exists'), 'red');
+        return;
     }
 
     const ok = await save_profile(action, editor.data);

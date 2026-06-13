@@ -17,6 +17,7 @@
         "edit_profile": "Edit Profile",
         "languages": "Languages",
         "name": "Name",
+        "name_exists": "Name already exists!",
         "no_changes": "No changes, skipped.",
         "ok": "OK",
         "password": "Password",
@@ -28,7 +29,8 @@
         "save": "Save",
         "settings": "Settings",
         "user": "User",
-        "username": "Username"
+        "username": "Username",
+        "username_exists": "Username already exists!"
     },
     "zh": {
         "add_dir": "添加目录",
@@ -48,6 +50,7 @@
         "edit_profile": "修改用户配置",
         "languages": "多语言",
         "name": "名称",
+        "name_exists": "名称已存在！",
         "no_changes": "无变化，已跳过。",
         "ok": "确定",
         "password": "密码",
@@ -59,6 +62,7 @@
         "save": "保存",
         "settings": "设置",
         "user": "用户",
-        "username": "用户名"
+        "username": "用户名",
+        "username_exists": "用户名已存在！"
     }
 }
