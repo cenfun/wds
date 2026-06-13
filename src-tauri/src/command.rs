@@ -2,9 +2,10 @@
 
 use crate::settings::get_settings;
 use crate::settings::save_dir;
-use crate::settings::save_port;
+use crate::settings::save_server_config;
 use crate::settings::save_profile;
 use crate::settings::DirItem;
+use crate::settings::ServerConfig;
 use crate::settings::ProfileItem;
 use crate::settings::Settings;
 
@@ -21,8 +22,8 @@ pub fn invoke_get_settings() -> Settings {
 }
 
 #[tauri::command(async)]
-pub fn invoke_save_port(port: u16) -> bool {
-    save_port(port)
+pub fn invoke_save_server_config(config: ServerConfig) -> bool {
+    save_server_config(config)
 }
 
 #[tauri::command(async)]

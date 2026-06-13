@@ -17,8 +17,8 @@
 
         <IconLabel
           icon="edit"
-          :label="t('edit_port')"
-          @click="onEditPortClick"
+          :label="t('edit_server')"
+          @click="onEditServerClick"
         />
 
         <IconLabel
@@ -177,8 +177,8 @@
         v-if="editor.type==='profile'"
         @updated="onUpdated"
       />
-      <EditPort
-        v-if="editor.type==='port'"
+      <EditServer
+        v-if="editor.type==='server'"
         @updated="onUpdated"
       />
       <EditDir
@@ -205,7 +205,7 @@ import { save_profile, save_dir } from '../utils/api-private.js';
 import IconLabel from './icon-label.vue';
 
 import EditProfile from './edit-profile.vue';
-import EditPort from './edit-port.vue';
+import EditServer from './edit-server.vue';
 import EditDir from './edit-dir.vue';
 
 
@@ -308,12 +308,12 @@ const onDeleteProfileClick = (item) => {
 
 // =====================================================================================
 
-const onEditPortClick = () => {
-    editor.type = 'port';
+const onEditServerClick = () => {
+    editor.type = 'server';
     editor.data = {
         port: toRaw(state.port)
     };
-    editor.title = t('edit_port');
+    editor.title = t('edit_server');
     editor.visible = true;
 };
 

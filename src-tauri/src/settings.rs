@@ -227,10 +227,15 @@ pub fn save_settings(settings: Settings) -> bool {
     res
 }
 
-pub fn save_port(port: u16) -> bool {
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ServerConfig {
+    pub port: u16,
+}
+
+pub fn save_server_config(config: ServerConfig) -> bool {
     let mut settings = get_settings();
-    settings.port = port;
-    return save_settings(settings);
+    settings.port = config.port;
+    save_settings(settings)
 }
 
 //======================================================================================

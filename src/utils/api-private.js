@@ -28,10 +28,8 @@ export const get_settings = () => {
     return invoke_api('get_settings');
 };
 
-export const save_port = (port) => {
-    return invoke_api('save_port', {
-        port
-    });
+export const save_server_config = (config) => {
+    return invoke_api('save_server_config', { config });
 };
 
 

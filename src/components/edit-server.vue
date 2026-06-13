@@ -6,27 +6,22 @@
     <table class="wds-table">
       <tbody>
         <tr>
-          <td>{{ t("username") }}</td>
+          <td>{{ t("port") }}</td>
           <td>
-            <VuiInput
-              v-model="editor.data.username"
-              :placeholder="t('anonymous')"
-              width="180px"
-            />
+            <VuiFlex
+              gap="10px"
+              padding="5px"
+            >
+              <VuiInput
+                v-model="editor.data.port"
+                type="number"
+                min="0"
+                max="65535"
+              />
+              <div>(0~65535)</div>
+            </VuiFlex>
           </td>
         </tr>
-
-        <tr>
-          <td> {{ t("password") }}</td>
-          <td>
-            <VuiInput
-              v-model="editor.data.password"
-              type="password"
-              width="180px"
-            />
-          </td>
-        </tr>
-
         <tr>
           <td />
           <td>
@@ -61,7 +56,7 @@ import { components } from 'vine-ui';
 
 // import { open } from '@tauri-apps/plugin-dialog';
 
-import { save_profile } from '../utils/api-private.js';
+import { save_server_config } from '../utils/api-private.js';
 
 import { useTranslation } from 'i18next-vue';
 const { t } = useTranslation();
@@ -78,14 +73,14 @@ const {
 const editor = inject('editor');
 
 const onSaveClick = async () => {
-
-    const action = editor.previous ? 'update' : 'create';
-    const ok = await save_profile(action, editor.data);
-
+    let port = editor.data.port;
+    if (!port) {
+        port = 8090;
+    }
+    const ok = await save_server_config({ port });
     if (ok) {
         emit('updated');
     }
-
     editor.visible = false;
 
 };

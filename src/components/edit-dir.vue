@@ -1,7 +1,7 @@
 <template>
   <div
     ref="el"
-    class="wds-profile-edit"
+    class="wds-edit-modal" style="min-width:320px"
   >
     <table class="wds-table">
       <tbody>

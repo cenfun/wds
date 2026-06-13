@@ -16,7 +16,7 @@ mod command;
 use command::invoke_get_settings;
 use command::invoke_restart;
 use command::invoke_save_dir;
-use command::invoke_save_port;
+use command::invoke_save_server_config;
 use command::invoke_save_profile;
 
 use common::set_window_focus;
@@ -60,7 +60,7 @@ pub fn run() {
             invoke_get_settings,
             invoke_restart,
             invoke_save_dir,
-            invoke_save_port,
+            invoke_save_server_config,
             invoke_save_profile
         ])
         .on_page_load(move |_window, _payload| _on_page_load.call(true))
