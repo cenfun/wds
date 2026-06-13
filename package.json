@@ -1,28 +1,37 @@
 {
     "name": "wds",
-    "version": "0.0.1",
+    "version": "2.0.0",
     "private": true,
-    "main": "dist/wds.js",
+    "type": "module",
     "scripts": {
-        "dev": "cls && tauri dev",
-        "build": "cls && tauri build",
-        "icon": "cls && tauri icon ./assets/icon.png"
+        "dev:ui": "vite dev",
+        "build:ui": "vite build",
+        "dev": "tauri dev",
+        "build": "tauri build",
+        "icon": "tauri icon ./assets/icon.png",
+        "update": "cd src-tauri && cargo update"
     },
     "license": "MIT",
-    "dependencies": {},
+    "dependencies": {
+        "@tauri-apps/api": "^2.11.0",
+        "@tauri-apps/plugin-dialog": "^2.7.1",
+        "@tauri-apps/plugin-opener": "^2.5.4",
+        "vue": "^3.5.38"
+    },
     "devDependencies": {
-        "@tauri-apps/api": "^1.5.1",
-        "@tauri-apps/cli": "^1.5.6",
-        "eslint": "^8.53.0",
-        "eslint-config-plus": "^1.0.6",
-        "eslint-plugin-html": "^7.1.0",
-        "eslint-plugin-vue": "^9.18.1",
+        "@tauri-apps/cli": "^2.11.2",
+        "@vitejs/plugin-vue": "^6.0.7",
+        "eslint": "^10.5.0",
+        "eslint-config-plus": "^2.0.4",
+        "eslint-plugin-vue": "^10.9.2",
         "fps-detector": "^1.0.3",
-        "i18next": "^23.7.6",
-        "i18next-browser-languagedetector": "^7.2.0",
-        "i18next-vue": "^3.0.0",
-        "stylelint": "^15.11.0",
-        "stylelint-config-plus": "^1.0.4",
-        "vine-ui": "^3.1.12"
+        "i18next": "^26.3.1",
+        "i18next-browser-languagedetector": "^8.2.1",
+        "i18next-vue": "^5.4.0",
+        "sass-embedded": "^1.100.0",
+        "stylelint": "^17.13.0",
+        "stylelint-config-plus": "^1.1.6",
+        "vine-ui": "^3.1.18",
+        "vite": "^8.0.16"
     }
 }

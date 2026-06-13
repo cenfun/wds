@@ -1,3 +1,0 @@
-# wds-app
-
-## Getting Started

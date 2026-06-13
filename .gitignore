@@ -1,6 +1,9 @@
-node_modules
-dist
-.temp/
-package-lock.json
-src-tauri/Cargo.lock
-src-tauri/target/
+/package-lock.json
+/dist
+/node_modules
+/src-tauri/target
+/src-tauri/gen/schemas
+/src-tauri/Cargo.lock
+/.codegraph
+/.mcp.json
+/.claude
