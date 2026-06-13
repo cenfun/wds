@@ -73,6 +73,16 @@ export const NF = function(v) {
     return v.toLocaleString();
 };
 
+export const timestamp = (postfix) => {
+    let ts = new Date(Date.now() - new Date().getTimezoneOffset() * 60 * 1000).toISOString().slice(2, 19);
+    ts = ts.replace(/[-:]/g, '');
+    ts = ts.replace('T', '-');
+    if (postfix) {
+        ts = `${ts}-${postfix}`;
+    }
+    return ts;
+};
+
 // =============================================================================
 // hash
 export const getHash = function(key) {

@@ -72,6 +72,7 @@ const onSettingsClick = () => {
 
     > div {
         padding: 2px 0;
+        font-family: monospace;
         word-break: break-all;
     }
 

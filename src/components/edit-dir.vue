@@ -1,7 +1,8 @@
 <template>
   <div
     ref="el"
-    class="wds-edit-modal" style="min-width:320px"
+    class="wds-edit-modal"
+    style="min-width: 320px;"
   >
     <table class="wds-table">
       <tbody>
@@ -95,6 +96,7 @@ import { open } from '@tauri-apps/plugin-dialog';
 import { basename } from '@tauri-apps/api/path';
 
 import { save_dir } from '../utils/api-private.js';
+import { log } from '../utils/helper.js';
 import { formatPath } from '../utils/util.js';
 
 import IconLabel from './icon-label.vue';
@@ -117,6 +119,7 @@ const editor = inject('editor');
 const el = ref(null);
 let $el;
 
+// eslint-disable-next-line complexity
 const onSaveClick = async () => {
     if (!editor.data.name) {
         $el.querySelector('.wds-dir-name input').focus();
@@ -128,6 +131,19 @@ const onSaveClick = async () => {
     }
 
     const action = editor.previous ? 'update' : 'create';
+
+    if (action === 'update' && editor.previous) {
+        const prev = editor.previous;
+        if (prev.name === editor.data.name
+            && prev.path === editor.data.path
+            && prev.permission === editor.data.permission
+        ) {
+            log(t('no_changes'));
+            editor.visible = false;
+            return;
+        }
+    }
+
     const id = editor.profile_id;
     const ok = await save_dir(action, id, editor.data);
 

@@ -1,3 +1,5 @@
+import { timestamp } from './util.js';
+
 let $logs;
 let timeout_log;
 const max_logs = 100;
@@ -6,6 +8,8 @@ export const log = (str, color) => {
         // remove "" for rust struct
         str = JSON.stringify(str, null, 4).replace(/"/g, '');
     }
+
+    str = `${timestamp()}: ${str}`;
 
     const $line = document.createElement('div');
     if (color) {

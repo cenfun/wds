@@ -57,6 +57,7 @@ import { components } from 'vine-ui';
 // import { open } from '@tauri-apps/plugin-dialog';
 
 import { save_server_config } from '../utils/api-private.js';
+import { log } from '../utils/helper.js';
 
 import { useTranslation } from 'i18next-vue';
 const { t } = useTranslation();
@@ -71,12 +72,20 @@ const {
 
 
 const editor = inject('editor');
+const state = inject('state');
 
 const onSaveClick = async () => {
     let port = editor.data.port;
     if (!port) {
         port = 8090;
     }
+
+    if (port === state.port) {
+        log(t('no_changes'));
+        editor.visible = false;
+        return;
+    }
+
     const ok = await save_server_config({ port });
     if (ok) {
         emit('updated');
