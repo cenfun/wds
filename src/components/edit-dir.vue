@@ -5,82 +5,82 @@
   >
     <table class="wds-table">
       <tbody>
-      <tr>
-        <td>{{ t("name") }}</td>
-        <td>
-          <VuiFlex
-            gap="10px"
-            padding="5px"
-          >
-            <VuiInput
-              v-model="editor.data.name"
-              class="wds-dir-name"
-              width="180px"
-            />
-          </VuiFlex>
-        </td>
-      </tr>
-
-      <tr>
-        <td> {{ t("path") }}</td>
-        <td>
-          <VuiFlex
-            gap="10px"
-            padding="5px"
-          >
-            <VuiInput
-              v-model="editor.data.path"
-              class="wds-dir-path"
-              width="180px"
-            />
-
-            <IconLabel
-              icon="open"
-              @click="onOpenFolder"
-            />
-          </VuiFlex>
-        </td>
-      </tr>
-
-      <tr>
-        <td> {{ t("permission") }}</td>
-        <td>
-          <VuiFlex
-            gap="10px"
-            padding="5px"
-          >
-            <VuiSelect v-model="editor.data.permission">
-              <option>read</option>
-              <option>write</option>
-            </VuiSelect>
-          </VuiFlex>
-        </td>
-      </tr>
-
-      <tr>
-        <td />
-        <td>
-          <VuiFlex
-            gap="10px"
-            padding="5px"
-          >
-            <VuiButton
-              width="80px"
-              primary
-              @click="onSaveClick"
+        <tr>
+          <td>{{ t("name") }}</td>
+          <td>
+            <VuiFlex
+              gap="10px"
+              padding="5px"
             >
-              {{ t("save") }}
-            </VuiButton>
-            <VuiButton
-              width="80px"
-              @click="onCancelClick"
+              <VuiInput
+                v-model="editor.data.name"
+                class="wds-dir-name"
+                width="180px"
+              />
+            </VuiFlex>
+          </td>
+        </tr>
+
+        <tr>
+          <td> {{ t("path") }}</td>
+          <td>
+            <VuiFlex
+              gap="10px"
+              padding="5px"
             >
-              {{ t("cancel") }}
-            </VuiButton>
-          </VuiFlex>
-        </td>
-      </tr>
-    </tbody>
+              <VuiInput
+                v-model="editor.data.path"
+                class="wds-dir-path"
+                width="180px"
+              />
+
+              <IconLabel
+                icon="open"
+                @click="onOpenFolder"
+              />
+            </VuiFlex>
+          </td>
+        </tr>
+
+        <tr>
+          <td> {{ t("permission") }}</td>
+          <td>
+            <VuiFlex
+              gap="10px"
+              padding="5px"
+            >
+              <VuiSelect v-model="editor.data.permission">
+                <option>read</option>
+                <option>write</option>
+              </VuiSelect>
+            </VuiFlex>
+          </td>
+        </tr>
+
+        <tr>
+          <td />
+          <td>
+            <VuiFlex
+              gap="10px"
+              padding="5px"
+            >
+              <VuiButton
+                width="80px"
+                primary
+                @click="onSaveClick"
+              >
+                {{ t("save") }}
+              </VuiButton>
+              <VuiButton
+                width="80px"
+                @click="onCancelClick"
+              >
+                {{ t("cancel") }}
+              </VuiButton>
+            </VuiFlex>
+          </td>
+        </tr>
+      </tbody>
     </table>
   </div>
 </template>

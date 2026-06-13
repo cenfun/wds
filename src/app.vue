@@ -253,8 +253,7 @@ pane
 
 .wds-page-list {
     padding: 5px;
-    overflow-x: hidden;
-    overflow-y: auto;
+    overflow: hidden auto;
 }
 
 .wds-page-toolbar {
@@ -281,9 +280,8 @@ table
         padding: 5px;
     }
 
-    td,
-    th {
-        border: 1px solid #ddd;
+    tr:not(:last-child) {
+        border-bottom: 1px solid #eee;
     }
 
     .wds-table-left {
