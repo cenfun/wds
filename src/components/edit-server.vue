@@ -86,7 +86,9 @@ const onSaveClick = async () => {
         return;
     }
 
-    const ok = await save_server_config({ port });
+    const ok = await save_server_config({
+        port
+    });
     if (ok) {
         emit('updated');
     }

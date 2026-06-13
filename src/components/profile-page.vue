@@ -9,7 +9,10 @@
           :label="t('address')+':'"
           :button="false"
         />
-        <div class="wds-address">
+        <div
+          class="wds-address"
+          @click="onCopyAddress"
+        >
           {{ state.address }}
         </div>
 
@@ -198,7 +201,7 @@ import { components } from 'vine-ui';
 // import { open } from '@tauri-apps/plugin-dialog';
 
 import { isList } from '../utils/util.js';
-// import { log } from '../utils/helper.js';
+import { log } from '../utils/helper.js';
 
 import { save_profile, save_dir } from '../utils/api-private.js';
 
@@ -321,6 +324,15 @@ const onRestartClick = () => {
     emit('restart');
 };
 
+const onCopyAddress = async () => {
+    try {
+        await navigator.clipboard.writeText(state.address);
+        log(t('copied'));
+    } catch {
+        log('copy failed', 'red');
+    }
+};
+
 const onUpdated = () => {
     emit('updated');
 };
@@ -343,6 +355,7 @@ const onUpdated = () => {
     color: green;
     font-weight: normal;
     font-family: Menlo, Consolas, monospace;
+    cursor: pointer;
 }
 
 .wds-username {
